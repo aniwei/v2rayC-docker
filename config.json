@@ -1,0 +1,146 @@
+{
+  //配置v2Ray日志文件位置
+  "log" : {
+    "access": "/etc/v2ray/log/access.log",
+    "error": "/etc/v2ray/log/error.log",
+    "loglevel": "warning"
+  },
+  //v2ray入栈设置
+"inbound": {
+    "port": 1080,//监听端口
+    "listen": "127.0.0.1",//监听地址
+    "protocol": "socks",//监听协议
+    "sniffing": {
+      "enabled": true,
+      "destOverride": [
+        "http",
+        "tls"
+      ]
+    },
+    "settings": {
+      "auth": "noauth",
+      "udp": true,
+      "ip": "127.0.0.1",
+      "clients": null
+    },
+    "streamSettings": null
+  },
+  //出栈配置
+  "outbound": {
+    "tag": "agentout",
+    "protocol": "vmess",//加密协议
+    "settings": {
+      "vnext": [
+        {
+          "address": "www.ccc.cc",//服务器地址(支持域名和ip)
+          "port": 443,//端口
+          //配置用户
+          "users": [
+            //多用户用{},分开
+            {
+              "id": "94645-2cba-e9-2a-4163a15e",
+              "alterId": 64,
+              "email": "t@t.tt",
+              "security": "aes-128-gcm"
+            }
+          ]
+        }
+      ],
+      "servers": null
+    },
+    //出口协议额外配置
+    "streamSettings": {
+      "network": "ws",//设置传输协议(此处切换kcp和ws协议)
+      "security": "tls",//底层安全(如果不使用,设置为空""即可)
+      "tlsSettings": {
+        "allowInsecure": true,
+        "serverName": null
+      },
+      "tcpSettings": null,
+      //配置Websockets协议相关参数
+      "wsSettings": {
+        "connectionReuse": true,
+        "path": "/ray",//path和服务端保持一致
+        "headers": null
+      },
+      //配置kcp协议相关参数(要与服务端对应)
+      "kcpSettings": {
+        "mtu": 1350,
+        "tti": 50,
+        "uplinkCapacity": 12,
+        "downlinkCapacity": 100,
+        "congestion": true,
+        "readBufferSize": 3,
+        "writeBufferSize": 3,
+        "header": {
+          "type": "none",
+          "request": null,
+          "response": null
+        }
+      },
+      "httpSettings": null
+    },
+    "mux": {
+      "enabled": true//TCP多路复用
+    }
+  },
+  "inboundDetour": null,
+  //出栈协议额外配置
+  "outboundDetour": [
+    //配置直连的标签(此处配置以后,路由功能才生效)
+    {
+      "protocol": "freedom",//传出协议为直连
+      "settings": {
+        "response": null
+      },
+      "tag": "direct"//标签为直连
+    },
+    //配置丢弃的标签(主要针对广告)
+    {
+      "protocol": "blackhole",//传出协议为丢弃
+      "settings": {
+        "response": {
+          "type": "http"
+        }
+      },
+      "tag": "blockout"//丢弃的标签
+    }
+  ],
+  "dns": {
+    "servers": [
+      "8.8.8.8",
+      "8.8.4.4",
+      "localhost"
+    ]
+  },
+  //配置分流
+  "routing": {
+    "strategy": "rules",
+    "settings": {
+      //域名解析策略
+      "domainStrategy": "IPIfNonMatch",//优先匹配域名；
+      //路由规则
+      "rules": [
+        //ip匹配规则
+        {
+          "type": "chinaip",
+          "outboundTag": "direct",//走直连
+          "network":"tcp,udp",
+          "ip": [
+            "geoip:cn",//v2ray内置ip数据库文件的中国ip
+            "geoip:private"//v2ray内置ip数据库文件的内网ip(如路由器)
+          ]
+        },
+        //域名匹配规则
+        {
+          "type": "field",
+          "outboundTag": "direct",//走直连
+          "network":"tcp,udp",
+          "domain": [
+            "geosite:cn"//v2ray内置域名数据库文件的国内常用域名
+          ]
+        }
+      ]
+    }
+  }
+}
